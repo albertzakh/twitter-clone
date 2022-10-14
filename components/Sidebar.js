@@ -12,8 +12,13 @@ import PendingOutlinedIcon from '@mui/icons-material/PendingOutlined';
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined'
 import profileDef from "../img/profileDef.png";
 import Image from 'next/image';
+import { logout } from "../features/userSlice";
+import { useDispatch, useSelector } from "react-redux"; 
 
 function Sidebar() {
+  const dispatch = useDispatch();
+  const user = useSelector(state => state.user.value);
+
   return (
     <Container>
         <SidebarTop>
@@ -26,13 +31,13 @@ function Sidebar() {
           <SidebarOption Icon={FeaturedPlayListOutlinedIcon} title="Explore" />
           <SidebarOption Icon={PermIdentityOutlinedIcon} title="Profile" />
           <SidebarOption Icon={PendingOutlinedIcon} title="More" />
-          <SidebarTweet>Tweet</SidebarTweet>
+          <SidebarTweet><p>Tweet</p></SidebarTweet>
         </SidebarTop>
         <SidebarBottom>
-          <Image src={profileDef} width={62} height={52} />
-          <SidebarUserInfo>
-            <Username>Albert</Username>
-            <TwitterUsername>@Albert</TwitterUsername>
+          <Image src={!user ? profileDef : user.photoURL} width={45} height={45} style={{borderRadius:"999px"}} />
+          <SidebarUserInfo onClick={() => dispatch(logout())}>
+            <Username>{user?.name}</Username>
+            <TwitterUsername>@{user?.name.toLowerCase()}</TwitterUsername>
           </SidebarUserInfo>
           <SidebarBottomDots />
         </SidebarBottom>
@@ -44,7 +49,6 @@ export default Sidebar
 
 const Container = styled.header`
     font-size:30px;
-    width:21%;
     border-right:1px solid #eff3f4;
     height:100vh;
     display: flex;
@@ -53,6 +57,19 @@ const Container = styled.header`
     padding-bottom:10px;
     position:sticky;
     top:0;
+    padding-right:30px;
+
+    @media screen and (max-width:1280px) {
+        display: flex;
+        align-items: flex-end;
+        width:10px;
+        padding-right:10px;
+        padding-left:80px;
+    }
+
+    @media screen and (max-width:500px) {
+      display:none;
+    }
 `;
 
 const SidebarTop = styled.div``
@@ -70,7 +87,7 @@ const TwitterLogo = styled(TwitterIcon)`
 `
 
 const SidebarTweet = styled.button`
-  width:95%;
+  width:200px;
   height:50px;
   border-radius:999px;
   border:none;
@@ -80,6 +97,11 @@ const SidebarTweet = styled.button`
   font-size:16px;
   margin-top:15px;
   cursor: pointer;
+
+   @media screen and (max-width:1280px) {
+        width:60px;
+        height:60px;
+    }
 `;
 
 const SidebarBottom = styled.div`
@@ -89,22 +111,27 @@ const SidebarBottom = styled.div`
   display: flex;
   align-items: center;
   position: relative;
+  padding-left:15px;
   
   :hover {
     background-color: #eeeeef;
   }
   cursor: pointer;
+
+  @media screen and (max-width:1280px) {
+    display: none;
+  }
 `
 
 const SidebarUserInfo = styled.div`
-  height:90%;
+  width:180px;
   display: flex;
   flex-direction: column;
+  margin-left:10px;
 `;
 
 const Username = styled.strong`
   font-size:16px;
-  margin-top:10px;
 `;
 
 const TwitterUsername = styled.p`
@@ -113,6 +140,10 @@ const TwitterUsername = styled.p`
 
 const SidebarBottomDots = styled(MoreHorizOutlinedIcon)`
   position: absolute;
-  right:10px;
+  right:15px;
   top:20px;
+
+   @media screen and (max-width:1280px) {
+    display: none;
+  }
 `;

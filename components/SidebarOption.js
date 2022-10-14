@@ -23,7 +23,6 @@ const SidebarContainer = styled.div`
 
     :hover a {
         background-color: #e9eaea;
-
     }
 `
 
@@ -35,9 +34,17 @@ const SidebarContent = styled.a`
     :hover {
         background-color: #e9eaea;
     }
+
+    @media screen and (max-width:1280px) {
+        padding:8px;
+    }
 `;
 
 const SidebarText = styled.span`
     font-size:21px;
     margin-left:22px;
+
+     @media screen and (max-width:1280px) {
+        display:none
+    }
 `

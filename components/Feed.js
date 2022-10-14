@@ -4,13 +4,22 @@ import Image from "next/image";
 import profileDef from "../img/profileDef.png";
 import InsertPhotoOutlinedIcon from '@mui/icons-material/InsertPhotoOutlined';
 import GifBoxOutlinedIcon from '@mui/icons-material/GifBoxOutlined';
+import { db } from "../firebase";
+import { onSnapshot, collection, addDoc, serverTimestamp, query, orderBy, updateDoc, doc } from "firebase/firestore";
 import Post from "./Post";
+import { useSelector } from "react-redux"; 
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../firebase";
 
 function Feed() {
+  const user = useSelector(state => state.user.value);
+
   const [posts, setPosts] = useState([]);
 
-  const [disbaled, setDisabled] = useState(true);
+  const [image, setImage] = useState(null);
   const [messageField, setMessageField] = useState("");
+
+  const [disbaled, setDisabled] = useState(true);
 
   useEffect(() => {
     if(!messageField) {
@@ -21,28 +30,86 @@ function Feed() {
     }
   }, [messageField])
 
+  useEffect(() => {
+    let subscribe = onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), snapshot => {
+      setPosts(snapshot.docs.map(doc => (
+        {
+          id:doc.id,
+          data:doc.data()
+        }
+      )))
+    })
+    return () => subscribe;
+  }, [db])
+
+  const uploadImage = (e) => {
+    if(e.target.files[0]) {
+      setImage(e.target.files[0]);
+    }
+    else {
+      setImage(null);
+    }
+  }
+
+  const AddPost = async (e) => {
+    e.preventDefault();
+
+    let downloadURL;
+
+    if(image) {
+      setDisabled(true)
+      const imageRef = ref(storage, `images/${image.name + Math.random() * 10000000}`)
+      await uploadBytes(imageRef, image).then(async snapshot => {
+        downloadURL = await getDownloadURL(imageRef)
+      })
+    }
+    else {
+      downloadURL = null;
+    }
+
+    const docRef = await addDoc(collection(db, "posts"), {
+      username: user.name,
+      message: messageField,
+      photoURL: user.photoURL,
+      timestamp: serverTimestamp(),
+      postImage: downloadURL
+    })
+
+    setMessageField("");
+    downloadURL = null;
+    setImage(null);
+  }
+
+  const addComment = async (e) => {
+    setCommentsClicked(true);
+  }
+
   return (
     <FeedContainer>
       <strong style={{marginLeft:"20px", fontSize:"19px"}}>HOME</strong>
       <FeedAddContainer>
         <FeedAddTop>
-          <Image src={profileDef} width={65} height={65} objectFit="cover" style={{cursor:"pointer"}} />
+          <AddUserImage src={!user ? profileDef : user.photoURL} />
             <Input onChange={(e) => setMessageField(e.target.value)} value={messageField} placeholder="What's happening?" />
         </FeedAddTop>
         <FeedAddBottom>
           <label htmlFor="photo">
-            <input type="file" id="photo" style={{display:"none"}} />
+            <input onChange={uploadImage} type="file" accept="image/png, image/gif, image/jpeg" id="photo" style={{display:"none"}} />
             <FeedImage />
           </label>
           <label htmlFor="gif">
             <input type="file" id="gif" style={{display:"none"}} />
             <FeedGif />
           </label>
-          <FeedAddButton disabled={disbaled} style={{background: disbaled === true ? "#8ecdf7" : "#1d9bf0"}}>Tweet</FeedAddButton>
+          <FeedAddButton onClick={AddPost} disabled={disbaled} style={{background: disbaled === true ? "#8ecdf7" : "#1d9bf0"}}>Tweet</FeedAddButton>
         </FeedAddBottom>
       </FeedAddContainer>
       <FeedPostsContainer>
-        <Post />
+        {posts.map(post => {
+          return (
+            <Post key={post.id} id={post.id} message={post.data.message} username={post.data.username} userPhoto={post.data.photoURL} postImage={post.data.postImage} />
+          )
+        })}
       </FeedPostsContainer>
     </FeedContainer>
   )
@@ -52,9 +119,35 @@ export default Feed
 
 const FeedContainer = styled.div`
   padding-top:20px;
-  width:50%;
+  min-width:40%;
+  max-width:40%;
   border-right:1px solid #eff3f4;
+  width:100%;
+
+  @media screen and (max-width:1440px) {
+    max-width:50%;
+  }
+
+  @media screen and (max-width:1100px) {
+    max-width:75%;
+  }
+
+  @media screen and (max-width:500px) {
+    max-width:100%;
+  }
 `
+
+const AddUserImage = styled.img`
+  width:65px;
+  height:65px;
+  cursor: pointer;
+  border-radius:999px;
+
+  @media screen and (max-width:650px) {
+    width:50px;
+    height:50px;
+  }
+`;
 
 const FeedAddContainer = styled.div`
   position:relative;

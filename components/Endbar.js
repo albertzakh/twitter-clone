@@ -29,8 +29,15 @@ export default Endbar
 
 
 const EndBarContainer = styled.div`
+    position:sticky;
+    top:0;
     margin-left:30px;
     margin-top:5px;
+    height:100vh;
+
+    @media screen and (max-width:1024px) {
+        display:none
+    }
 `;
 
 const Input = styled.input`
@@ -47,7 +54,6 @@ const SearchContainer = styled.div`
     flex-direction: row;
     background-color: #f0f4f4;
     padding:14px;
-    width:350px;
     border-radius:999px;
 `;
 

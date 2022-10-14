@@ -1,4 +1,4 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
@@ -12,9 +12,11 @@ const firebaseConfig = {
   appId: "1:1609255382:web:cf065f84302cb35206bc77"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
 export const db = getFirestore();
 export const auth = getAuth(); 
-
 export const provider = new GoogleAuthProvider();
+export const storage = getStorage();
+
 

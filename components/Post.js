@@ -2,20 +2,72 @@ import { useState, useEffect } from "react";
 import styled from "styled-components"
 import Image from "next/image";
 import profileDef from "../img/profileDef.png";
+import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
+import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import { db } from "../firebase";
+import { onSnapshot, collection, doc, setDoc, deleteDoc } from "firebase/firestore";
+import { useSelector, useDispatch } from "react-redux";
 
-function Post() {
+function Post({ message, username, userPhoto, postImage, id }) {
+  const user = useSelector(state => state.user.value);
+
+  const dispatch = useDispatch();
+
+  const [likes, setLikes] = useState([]);
+  const [comments, setComments] = useState([]);
+
+  const [hasLiked, setHasLiked] = useState(false);
+
+  const handleComment = () => {
+    dispatch(addComment(true))
+    console.log(commentSelected)
+  }
+
+  const likePost = async () => {
+    if(hasLiked) {
+      await deleteDoc(doc(db, "posts", id, "likes", user.name))
+    }
+    else {
+      await setDoc(doc(db, "posts", id, "likes", user.name), {
+        username: user.name
+      })
+    }
+  }
+
+  useEffect(() => {
+    return onSnapshot(collection(db, "posts", id, "likes"), snapshot => {
+      setLikes(snapshot.docs.map(doc => {
+        return {
+          data:doc.data()
+        }
+      }));
+    })
+  }, [db, id])
+
+  useEffect(() => {
+    return setHasLiked(likes.findIndex(like => like.data.username === user.name) !== -1)
+  }, [likes])
+
   return (
     <FeedPost>
         <FeedPostHeader>
-        <Image src={profileDef} width={55} height={55} objectFit="cover" />
+        <FeedPostSenderImg src={!userPhoto ? profileDef : userPhoto} />
         <PostSenderInfo>
-            <span><strong>Albert</strong> - <span style={{color:"gray"}}>@Albert12345654 • 20h</span></span>
-            <p>The Math Dance</p>
+            <span><strong>{username}</strong> - <span style={{color:"gray"}}>@{username.toLowerCase()} • 20h</span></span>
+            <p>{message}</p>
         </PostSenderInfo>
         </FeedPostHeader>
         <PostSenderContent>
-            <img style={{width:"90%", height:"600px", objectFit:"cover", borderRadius:"20px" }} src="https://pbs.twimg.com/media/Fb7VRkdaUAArBWN?format=jpg&name=small" />
+          {postImage !== null ? <PostSentImage src={postImage} /> : null}
         </PostSenderContent>
+        <PostBottom>
+          <PostBottomChat onClick={handleComment} />
+          <PostBottomHeartContainer>
+            {hasLiked ? <PostBottomLikedHeart onClick={likePost} /> : <PostBottomHeart onClick={likePost} /> }
+            <LikeCount>{likes.length}</LikeCount>
+          </PostBottomHeartContainer>
+        </PostBottom>
     </FeedPost>
   )
 }
@@ -23,8 +75,7 @@ function Post() {
 export default Post
 
 const FeedPost = styled.div`
-  width:100%;
-  padding:20px 14px;
+  padding:20px 14px 20px 20px;
   cursor: pointer;
 
   :hover {
@@ -35,8 +86,20 @@ const FeedPost = styled.div`
 const FeedPostHeader = styled.div`
   width:100%;
   display:flex;
-  
-`
+`;
+
+const FeedPostSenderImg = styled.img`
+  width:55px;
+  height:55px;
+  border-radius: 999px;
+  object-fit:cover;
+
+  @media screen and (max-width:650px) {
+    width:45px;
+    height:45px;
+  }
+`;
+
 const PostSenderInfo = styled.div`
   margin-left:12px;
 `
@@ -47,4 +110,40 @@ const PostSenderContent = styled.div`
   margin-top:15px;
   display:flex;
   justify-content: center;
+`
+
+const PostSentImage = styled.img`
+  width:90%;
+  height:600px;
+  border-radius: 20px;
+  object-fit:cover;
+`;
+
+const PostBottom = styled.div`
+  margin-top:20px;
+  display: flex;
+  flex-direction:row;
+  justify-content:space-around;
+`
+
+const PostBottomChat = styled(ChatBubbleOutlineRoundedIcon)`
+  font-size:28px;
+`;
+
+const PostBottomHeartContainer = styled.div`
+  display:flex;
+  align-items: center;
+`
+
+const PostBottomHeart = styled(FavoriteBorderOutlinedIcon)`
+  font-size:28px;
+`;
+
+const PostBottomLikedHeart = styled(FavoriteIcon)`
+  font-size:28px;
+  color:red;
+`;
+
+const LikeCount = styled.strong`
+  margin-left:4px;
 `
