@@ -54,8 +54,8 @@ function Post({ message, username, userPhoto, postImage, id }) {
         <FeedPostHeader>
         <FeedPostSenderImg src={!userPhoto ? profileDef : userPhoto} />
         <PostSenderInfo>
-            <span><strong>{username}</strong> - <span style={{color:"gray"}}>@{username.toLowerCase()} • 20h</span></span>
-            <p>{message}</p>
+            <span><strong>{username}</strong> - <span style={{color:"gray"}}>@{username.toLowerCase()}</span></span>
+            <p style={{marginTop:"10px"}}>{message}</p>
         </PostSenderInfo>
         </FeedPostHeader>
         <PostSenderContent>
